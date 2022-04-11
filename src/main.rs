@@ -1,4 +1,6 @@
-use futures::Future;
+use futures::{future::BoxFuture, Future};
+struct BoxThing(Box<dyn FnOnce(&i64) -> BoxFuture<()>>);
+
 // a trait for our function to implement
 trait TestFn<'a>: Send + Sync {
     type Fut: Future<Output = ()>;
@@ -9,7 +11,7 @@ trait TestFn<'a>: Send + Sync {
 impl<'a, F, Fut> TestFn<'a> for F
 where
     F: FnOnce(&'a i64) -> Fut + Send + Sync,
-    Fut: Future<Output = ()>,
+    Fut: Future<Output = ()> + 'a,
 {
     type Fut = Fut;
 
@@ -32,7 +34,7 @@ async fn main_async() {
     test(working).await;
 
     // fails: passing closure with async move block
-    test(|v| async move {
+    test(|v: &_| async move {
         println!("works! {} ", v);
     })
     .await;
