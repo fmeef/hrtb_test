@@ -23,7 +23,10 @@ where
     func.call(&3).await
 }
 
+async fn working<'a>(v: &'a i64) {}
+
 async fn main_async() {
+    test(working).await;
     test(|v| async move {
         println!("works! {} ", v);
     })
